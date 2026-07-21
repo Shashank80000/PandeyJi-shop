@@ -16,7 +16,10 @@ let dbConnectPromise;
 
 const ensureDbConnected = () => {
     if (!dbConnectPromise) {
-        dbConnectPromise = connectDB();
+        dbConnectPromise = connectDB().catch((error) => {
+            dbConnectPromise = null;
+            throw error;
+        });
     }
 
     return dbConnectPromise;
@@ -45,9 +48,13 @@ app.use("/api/admin", adminRoutes);
 
 
 const startServer = async () => {
-    await ensureDbConnected();
-
     const port = process.env.PORT || 5001;
+
+    try {
+        await ensureDbConnected();
+    } catch (error) {
+        console.warn(`Starting without an active MongoDB connection: ${error.message}`);
+    }
 
     app.listen(port,()=>{
         console.log(`server is running at ${port}`);

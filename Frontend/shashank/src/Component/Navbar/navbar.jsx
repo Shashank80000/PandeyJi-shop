@@ -1,24 +1,57 @@
-import {Link, useNavigate} from "react-router";
+import {Link, useNavigate, useSearchParams} from "react-router";
 import { useState, useEffect } from "react";
 import api from "../../../src/api/axios";
 
 export default function Navbar() {
     const navigate = useNavigate();
     const [cartCount, setCartCount] = useState(0);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const searchValue = searchParams.get("search") || "";
+
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        if (value.trim()) {
+            setSearchParams({ search: value });
+        } else {
+            setSearchParams({});
+        }
+    };
+
+    // Theme (applies to whole website by toggling `dark` class on <html>)
+    const [theme, setTheme] = useState(() => {
+        if (typeof window === "undefined") return "light";
+        const saved = localStorage.getItem("theme");
+        if (saved === "light" || saved === "dark") return saved;
+        return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
+    });
+
+    useEffect(() => {
+        const root = document.documentElement;
+        if (theme === "dark") root.classList.add("dark");
+        else root.classList.remove("dark");
+
+        localStorage.setItem("theme", theme);
+    }, [theme]);
+
     const userId = localStorage.getItem("userId");
+    const userName = localStorage.getItem("name");
 
     useEffect(() => {
         const loadCart = async () => {
-            if (!userId) return setCartCount(0);
+            try {
+                if (!userId) return setCartCount(0);
 
-            const res = await api.get(`/cart/${userId}`);
-            const items = res.data.cart?.items ?? [];
-            const total = items.reduce((sum, item) => sum + item.quantity, 0);
-            setCartCount(total);
+                const res = await api.get(`/cart/${userId}`);
+                const items = res.data.cart?.items ?? [];
+                const total = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+                setCartCount(total);
+            } catch {
+                setCartCount(0);
+            }
         }
         loadCart();
         window.addEventListener("cartUpdated", loadCart);
-        
+
         return () => {
             window.removeEventListener("cartUpdated", loadCart);
         }
@@ -26,37 +59,80 @@ export default function Navbar() {
 
     const logout = () => {
         localStorage.clear();
+        // re-apply current theme preference after clearing other values
+        localStorage.setItem("theme", theme);
         setCartCount(0);
         navigate("/login");
-    }
+    };
+
+    const toggleTheme = () => {
+        setTheme((t) => (t === "dark" ? "light" : "dark"));
+    };
 
     return (
-        <nav className="flex justify-between p-4 shadow bg-black text-white">
-            <Link to= "/" className="font-bold text-xl">Pandey Ji</Link>
-
-            <div className="flex gap-4 items-center">
-                <Link to="/cart" className="relative text-xl">
-                 🛒
-                 {
-                    cartCount > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs px-1 rounded">
-                            {cartCount}
-                        </span>
-                    )
-                 }
+        <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
+            <nav className="mx-auto flex h-20 w-full max-w-[1200px] items-center justify-between px-6">
+                <Link to="/" className="flex items-center gap-2 text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-teal-700 text-lg text-white">P</span>
+                    Pandey Shop
                 </Link>
 
-                {
-                    !userId ?(
+                <input
+                    type="text"
+                    placeholder="Search products by title"
+                    value={searchValue}
+                    onChange={handleSearchChange}
+                    className="mx-4 h-10 flex-1 rounded-xl border border-slate-300 px-4 text-sm text-slate-800 outline-none ring-teal-600 transition focus:border-teal-600 focus:ring-2 max-w-xs dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                />
+
+                <div className="flex items-center gap-6">
+                    <Link to="/" className="text-sm font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
+                        Shop
+                    </Link>
+                    <Link to="/admin/login" className="text-sm font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
+                        Admin
+                    </Link>
+
+                    <Link to="/cart" className="relative rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-900">
+                        Cart
+                        {cartCount > 0 && (
+                            <span className="absolute -right-2 -top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-bold text-white">
+                                {cartCount}
+                            </span>
+                        )}
+                    </Link>
+
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-900"
+                        aria-label="Toggle theme"
+                        title="Toggle theme"
+                    >
+                        {theme === "dark" ? "🌙" : "☀️"}
+                    </button>
+
+                    {!userId ?(
                         <>
-                            <Link to="/login" className="text-lg">Login</Link>
-                            <Link to="/signup" className="text-lg">Signup</Link>
+                            <Link to="/login" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900 dark:text-slate-200">
+                                Login
+                            </Link>
+                            <Link to="/signup" className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">
+                                Signup
+                            </Link>
                         </>
                     ) : (
-                        <button onClick={logout} className="text-lg">Logout</button>
-                    )
-                }
-            </div>
-        </nav>
+                        <div className="flex items-center gap-3">
+                            <span className="hidden text-sm font-medium text-slate-600 lg:block dark:text-slate-300">
+                                Hi, {userName || "User"}
+                            </span>
+                            <button onClick={logout} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+                                Logout
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </nav>
+        </header>
     )
 }

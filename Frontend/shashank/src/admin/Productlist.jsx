@@ -6,6 +6,7 @@ import { useNavigate } from "react-router";
 export default function ProductList() {
     const [products, setProducts] = useState([]);
     const [errorMessage, setErrorMessage] = useState("");
+    const navigate = useNavigate();
 
     const loadProducts = async () => {
         try {
@@ -39,62 +40,70 @@ export default function ProductList() {
 
     //logout function
     const handleLogout = () => {
-        const navigate = useNavigate();
         localStorage.removeItem("adminToken"); // remove admin auth
         navigate("/admin/login"); // redirect to login
     };
 
     return (
-        <div className="max-w-4xl mx-auto mt-10">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Product List</h2>
-                <Link to="/admin/products/add" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                    Add New Product
-                </Link>
-                <button
-                    onClick={handleLogout}
-                    className="bg-red-500 text-white px-4 py-2 rounded"
-                >
-                    Logout
-                </button>
-            </div>
+        <div className="bg-slate-50 py-10">
+            <div className="mx-auto w-full max-w-[1200px] px-6">
+                <div className="mb-6 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-4xl font-black text-slate-900">Product List</h2>
+                        <p className="mt-1 text-sm text-slate-500">Manage catalog items and stock in desktop view.</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Link to="/admin/products/add" className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">
+                            Add New Product
+                        </Link>
+                        <button
+                            onClick={handleLogout}
+                            className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700"
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </div>
 
-            <table className="w-full table-auto border-collapse border border-gray-200">
-                <thead>
-                    <tr className="bg-gray-100">
-                        <th className="border border-gray-200 px-4 py-2">Title</th>
-                        <th className="border border-gray-200 px-4 py-2">Price</th>
-                        <th className="border border-gray-200 px-4 py-2">Stock</th>
-                        <th className="border border-gray-200 px-4 py-2">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {products.map((product) => (
-                        <tr key={product._id} className="text-center">
-                            <td className="border border-gray-200 px-4 py-2">{product.title}</td>
-                            <td className="border border-gray-200 px-4 py-2">₹ {product.price}</td>
-                            <td className="border border-gray-200 px-4 py-2">{product.stock}</td>
-                            <td className="border border-gray-200 px-4 py-2">
-                                <Link to={`/admin/products/edit/${product._id}`} className="text-blue-500 hover:underline mr-4">
-                                    Edit
-                                </Link>
-                                <button
-                                    onClick={() => deletedProduct(product._id)}
-                                    className="text-red-500 hover:underline">
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                    {products.length === 0 && (
-                        <tr>
-                            <td colSpan="4" className="border border-gray-200 px-4 py-4 text-center text-gray-600">
-                                {errorMessage || "No products found"}
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <table className="w-full table-auto border-collapse">
+                        <thead>
+                            <tr className="bg-slate-100 text-left text-sm uppercase tracking-[0.12em] text-slate-600">
+                                <th className="px-5 py-4">Title</th>
+                                <th className="px-5 py-4">Price</th>
+                                <th className="px-5 py-4">Stock</th>
+                                <th className="px-5 py-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {products.map((product) => (
+                                <tr key={product._id} className="border-t border-slate-200 text-sm text-slate-700">
+                                    <td className="px-5 py-4 font-semibold text-slate-900">{product.title}</td>
+                                    <td className="px-5 py-4">${Number(product.price || 0).toFixed(2)}</td>
+                                    <td className="px-5 py-4">{Number(product.stock || 0)}</td>
+                                    <td className="px-5 py-4">
+                                        <Link to={`/admin/products/edit/${product._id}`} className="mr-4 font-semibold text-teal-700 hover:text-teal-900">
+                                            Edit
+                                        </Link>
+                                        <button
+                                            onClick={() => deletedProduct(product._id)}
+                                            className="font-semibold text-rose-700 hover:text-rose-900">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                            {products.length === 0 && (
+                                <tr>
+                                    <td colSpan="4" className="px-4 py-10 text-center text-slate-600">
+                                        {errorMessage || "No products found"}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     )
 }

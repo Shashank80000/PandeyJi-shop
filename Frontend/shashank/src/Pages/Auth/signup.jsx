@@ -37,33 +37,28 @@
     }
 
     return (
-      <div className="min-h-screen bg-slate-100 p-4 flex items-center justify-center">
-        <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
-          <div className="bg-indigo-600 text-white p-8 flex flex-col justify-between">
-            <div>
-              
-            <h3>Demiwal</h3>
+      <div className="min-h-[calc(100vh-80px)] bg-slate-50 px-6 py-10">
+        <div className="mx-auto grid w-full max-w-[1100px] grid-cols-1 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl lg:grid-cols-2">
+          <div className="bg-gradient-to-br from-teal-800 to-cyan-700 p-10 text-white">
+            <h3 className="text-lg font-semibold tracking-wide text-cyan-100">Pandey Shop</h3>
 
-              <div className="mt-16">
-                <h1 className="text-3xl font-bold">Get Started</h1>
-                <p className="mt-3 text-indigo-100">Already have an account?</p>
-                <button
-                  type="button"
-                  onClick={() => navigate('/login')}
-                  className="mt-4 rounded-md bg-white text-indigo-600 px-4 py-2 text-sm font-semibold hover:bg-indigo-50"
-                >
-                  Log in
-
-                </button>
-              </div>
+            <div className="mt-16">
+              <h1 className="text-5xl font-black leading-tight">Create your account</h1>
+              <p className="mt-4 max-w-sm text-base text-cyan-100">Start shopping with fast checkout, saved addresses, and order tracking.</p>
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="mt-8 rounded-xl bg-white px-5 py-3 text-sm font-bold text-teal-800 hover:bg-teal-50"
+              >
+                Log in
+              </button>
             </div>
-
-          
           </div>
 
-          <div className="p-8 md:p-10">
+          <div className="p-10">
             <form onSubmit={handleSubmit} className="space-y-5">
-              <h2 className="text-2xl font-bold text-slate-800">Sign Up</h2>
+              <h2 className="text-3xl font-black text-slate-900">Sign Up</h2>
+              <p className="text-sm text-slate-500">Use your name, email, and secure password.</p>
 
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
@@ -77,7 +72,7 @@
                   onChange={handleChange}
                   placeholder="Enter your name"
                   required
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600"
                 />
               </div>
 
@@ -93,7 +88,7 @@
                   onChange={handleChange}
                   placeholder="Enter your email"
                   required
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600"
                 />
               </div>
 
@@ -109,13 +104,13 @@
                   onChange={handleChange}
                   placeholder="Enter your password"
                   required
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full rounded-md bg-indigo-600 text-white py-2.5 font-semibold hover:bg-indigo-700 transition"
+                className="w-full rounded-xl bg-teal-700 py-3 font-bold text-white transition hover:bg-teal-800"
               >
                 Create Account
               </button>

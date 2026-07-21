@@ -42,25 +42,30 @@ export default function EditProduct() {
 
 
   return (
-    <div className="max-w-lg mx-auto mt-10 bg-white p-6 shadow rounded">
-      <h2 className="text-xl font-bold mb-4">Edit Product</h2>
+    <div className="bg-slate-50 py-10">
+      <div className="mx-auto w-full max-w-[900px] px-6">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <h2 className="text-4xl font-black text-slate-900">Edit Product</h2>
+          <p className="mt-2 text-sm text-slate-500">Update content, pricing, and stock details.</p>
 
-      <form className="space-y-3" onSubmit={handleSubmit}>
-        {allowedFields.map((key) => (
-          <input
-            key={key}
-            name={key}
-            value={form[key]}
-            onChange={handleChange}
-            placeholder={key}
-            className="w-full border px-3 py-2 rounded"
-          />
-        ))}
+          <form className="mt-8 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+            {allowedFields.map((key) => (
+              <input
+                key={key}
+                name={key}
+                value={form[key]}
+                onChange={handleChange}
+                placeholder={key}
+                className="h-12 rounded-xl border border-slate-300 px-4 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600"
+              />
+            ))}
 
-        <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-          Update Product
-        </button>
-      </form>
+            <button className="md:col-span-2 mt-2 h-12 rounded-xl bg-teal-700 text-base font-bold text-white transition hover:bg-teal-800">
+              Update Product
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

@@ -58,15 +58,15 @@ export default function Cart() {
     };
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <div className="mx-auto w-full max-w-[1200px] px-6 py-12 text-slate-600">Loading cart...</div>;
     }
 
     if (error) {
-        return <div className="p-6 text-red-600">{error}</div>;
+        return <div className="mx-auto w-full max-w-[1200px] px-6 py-12 text-red-600">{error}</div>;
     }
 
     if (!userId) {
-        return <div className="p-6">Please login to view your cart.</div>;
+        return <div className="mx-auto w-full max-w-[1200px] px-6 py-12 text-slate-700">Please login to view your cart.</div>;
     }
 
     const items = cart?.items || [];
@@ -93,83 +93,100 @@ export default function Cart() {
     );
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
-            <h1 className="text-2xl font-bold mb-6">Your Cart</h1>
+        <div className="bg-slate-50 py-10">
+            <div className="mx-auto w-full max-w-[1200px] px-6">
+                <h1 className="text-4xl font-black text-slate-900">Your Cart</h1>
 
-            {safeItems.length === 0 ? (
-                <div>Your cart is empty.</div>
-            ) : (
-                <div className="space-y-4">
-                    {safeItems.map((item, index) => (
-                        <div
-                            key={item.productRefId || index}
-                            className="flex items-center justify-between p-4 border rounded"
-                        >
-                            <div className="flex items-center gap-4">
-                                {item.productImage ? (
-                                    <img
-                                        src={item.productImage}
-                                        alt={item.productTitle}
-                                        className="w-16 h-16 object-cover rounded"
-                                    />
-                                ) : (
-                                    <div className="w-16 h-16 rounded bg-gray-200 flex items-center justify-center text-xs text-gray-600">
-                                        No image
+                {safeItems.length === 0 ? (
+                    <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-600 shadow-sm">
+                        Your cart is empty.
+                    </div>
+                ) : (
+                    <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
+                        <div className="space-y-4">
+                            {safeItems.map((item, index) => (
+                                <div
+                                    key={item.productRefId || index}
+                                    className="grid items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:grid-cols-[1fr_auto_auto_auto]"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        {item.productImage ? (
+                                            <img
+                                                src={item.productImage}
+                                                alt={item.productTitle}
+                                                className="h-20 w-20 rounded-xl object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-slate-200 text-xs text-slate-600">
+                                                No image
+                                            </div>
+                                        )}
+                                        <div>
+                                            <h2 className="text-lg font-bold text-slate-900">
+                                                {item.productTitle}
+                                            </h2>
+                                            <p className="text-sm text-slate-500">
+                                                ₹{item.productPrice.toFixed(2)} each
+                                            </p>
+                                        </div>
                                     </div>
-                                )}
-                                <div>
-                                    <h2 className="text-lg font-semibold">
-                                        {item.productTitle}
-                                    </h2>
-                                    <p className="text-gray-600">
-                                        ${item.productPrice.toFixed(2)}
+
+                                    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1">
+                                        <button
+                                            onClick={() => updateQty(item.productRefId, item.quantity - 1)}
+                                            disabled={!item.productRefId}
+                                            className="h-8 w-8 rounded-md bg-white text-lg font-bold text-slate-700 shadow-sm disabled:opacity-50"
+                                        >
+                                            -
+                                        </button>
+                                        <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                                        <button
+                                            onClick={() => updateQty(item.productRefId, item.quantity + 1)}
+                                            disabled={!item.productRefId}
+                                            className="h-8 w-8 rounded-md bg-white text-lg font-bold text-slate-700 shadow-sm disabled:opacity-50"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+
+                                    <p className="text-lg font-black text-slate-900">
+                                        ₹{(item.productPrice * item.quantity).toFixed(2)}
                                     </p>
+
+                                    <button
+                                        onClick={() => removeItem(item.productRefId)}
+                                        disabled={!item.productRefId}
+                                        className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 disabled:opacity-50"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <h2 className="text-xl font-black text-slate-900">Order Summary</h2>
+                            <div className="mt-4 border-t border-slate-200 pt-4">
+                                <div className="flex items-center justify-between text-slate-600">
+                                    <span>Subtotal</span>
+                                    <span>₹{total.toFixed(2)}</span>
+                                </div>
+                                <div className="mt-2 flex items-center justify-between text-slate-600">
+                                    <span>Shipping</span>
+                                    <span>Free</span>
+                                </div>
+                                <div className="mt-4 flex items-center justify-between text-lg font-black text-slate-900">
+                                    <span>Total</span>
+                                    <span>₹{total.toFixed(2)}</span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() =>
-                                        updateQty(item.productRefId, item.quantity - 1)
-                                    }
-                                    disabled={!item.productRefId}
-                                    className="px-2 py-1 bg-gray-200 rounded"
-                                >
-                                    -
-                                </button>
-                                <span>{item.quantity}</span>
-                                <button
-                                    onClick={() =>
-                                        updateQty(item.productRefId, item.quantity + 1)
-                                    }
-                                    disabled={!item.productRefId}
-                                    className="px-2 py-1 bg-gray-200 rounded"
-                                >
-                                    +
-                                </button>
-                            </div>
-                            <div>
-                                <p className="font-semibold">
-                                    ${(item.productPrice * item.quantity).toFixed(2)}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => removeItem(item.productRefId)}
-                                disabled={!item.productRefId}
-                                className="text-red-500"
-                            >
-                                Remove
+                            <button onClick={() => navigate("/checkout-address")} className="mt-6 w-full rounded-xl bg-teal-700 py-3 font-bold text-white transition hover:bg-teal-800">
+                                Proceed to Checkout
                             </button>
-                        </div>
-                    ))}
-
-                    <div className="text-right mt-4">
-                        <h2 className="text-xl font-bold">Total: ${total.toFixed(2)}</h2>
+                        </aside>
                     </div>
-                    <button onClick={() => navigate("/checkout-address")} className="w-full bg-blue-500 text-white p-2 rounded">
-                        Proceed to Checkout
-                    </button>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
