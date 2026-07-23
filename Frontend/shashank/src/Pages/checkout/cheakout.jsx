@@ -31,13 +31,22 @@ export default function Checkout() {
           api.get(`/address/${userId}`),
         ]);
 
-        setCart(cartResponse.data?.cart || { items: [] });
 
-        const addressList = Array.isArray(addressResponse.data)
-          ? addressResponse.data
+
+            setCart(cartResponse.data?.cart || { items: [] });
+
+      const addressList = Array.isArray(addressResponse.data)
+        ? addressResponse.data
+        : Array.isArray(addressResponse.data?.addresses)
+          ? addressResponse.data.addresses
           : [];
-        setAddresses(addressList);
-        setSelectedAddress(addressList[0] || null);
+
+      setAddresses(addressList);
+      setSelectedAddress(addressList[0] || null);
+
+
+
+
       } catch (fetchError) {
         setError(fetchError?.response?.data?.message || "Unable to load checkout data");
         setCart({ items: [] });
@@ -113,11 +122,23 @@ export default function Checkout() {
               </button>
             </div>
 
-            {addresses.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-300 p-6 text-sm text-slate-600">
-                No address found. Please add an address to continue.
-              </div>
-            ) : (
+                {addresses.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-300 p-6">
+              <p className="text-sm text-slate-600">
+                No delivery address found.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => navigate("/checkout-address")}
+                className="mt-4 rounded-xl bg-teal-700 px-5 py-3 font-bold text-white hover:bg-teal-800"
+              >
+                + Add Delivery Address
+              </button>
+            </div>
+          ) : (
+
+
               <div className="space-y-3">
                 {addresses.map((addr) => (
                   <label

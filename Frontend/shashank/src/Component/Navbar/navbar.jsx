@@ -102,9 +102,7 @@ export default function Navbar() {
                     <Link to="/" className="text-sm font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
                         Shop
                     </Link>
-                    <Link to="/admin/login" className="text-sm font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
-                        Admin
-                    </Link>
+                   
 
                     <Link to="/cart" className="relative rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-900">
                         Cart
