@@ -8,6 +8,7 @@ import AddProduct from "../admin/Addproduct.jsx";
 import ProductList from "../admin/Productlist.jsx";
 import EditProduct from "../admin/Editproduct.jsx";
 import Navbar from "../Component/Navbar/navbar.jsx";
+import Footer from "../Component/Footer/footer.jsx";
 import Cart from "../Pages/Cart/cart.jsx";
 import Checkout from "../Pages/checkout/cheakout.jsx";
 import CheckoutAddress from "../Pages/checkout/cheakoutAddress.jsx";
@@ -22,7 +23,11 @@ function Layout() {
   return (
     <>
       <Navbar />
-      <Outlet />
+       <main>
+        <Outlet />
+      </main>
+
+      <Footer />
     </>
   );
 }

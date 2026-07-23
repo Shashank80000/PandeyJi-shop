@@ -2,6 +2,7 @@ import React from 'react'
 import { useState } from 'react'
 import { useNavigate} from 'react-router';
 import api from '../../api/axios'
+import { Link } from 'react-router';
 
 
 function Login() {
@@ -73,6 +74,12 @@ function Login() {
             >
               Create Account
             </button>
+          {/* Adnin Login  */}
+
+           <Link to="/admin/login" className="t-8 rounded-xl m-4 bg-white px-5 py-3 text-sm font-bold text-teal-800 hover:bg-teal-50">
+                        Admin Login
+                    </Link>
+
           </div>
         </div>
 

@@ -66,72 +66,273 @@ export default function Home() {
     }
   };
 
+
+       const [showPromotion, setShowPromotion] = useState(true);
+
+const [timeLeft, setTimeLeft] = useState({
+  days: 4,
+  hours: 6,
+  minutes: 42,
+  seconds: 0,
+});
+
+useEffect(() => {
+  // 4 days, 6 hours, 42 minutes from now
+  const endTime =
+    Date.now() +
+    (4 * 24 * 60 * 60 * 1000) +
+    (6 * 60 * 60 * 1000) +
+    (42 * 60 * 1000);
+
+  const timer = setInterval(() => {
+    const difference = endTime - Date.now();
+
+    if (difference <= 0) {
+      clearInterval(timer);
+
+      setTimeLeft({
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+      });
+
+      return;
+    }
+
+    setTimeLeft({
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+
+      hours: Math.floor(
+        (difference / (1000 * 60 * 60)) % 24
+      ),
+
+      minutes: Math.floor(
+        (difference / (1000 * 60)) % 60
+      ),
+
+      seconds: Math.floor(
+        (difference / 1000) % 60
+      ),
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, []);
+
+
+
+
   return (
     <div className="bg-slate-50 pb-12">
 
       {/* Last time offer */}
 
-      <div role="region" aria-label="Promotion"
-        className="bg-blue-700 px-4 py-2.5 relative flex items-center justify-center text-center md:px-6">
+     {showPromotion && (
+  <div
+    role="region"
+    aria-label="Promotion"
+    className="relative flex items-center justify-center bg-blue-700 px-4 py-2.5 text-center md:px-6"
+  >
+    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 pr-8">
 
-        <div className="flex items-center justify-center flex-wrap gap-y-4 gap-x-6 pr-6">
-          <p className="text-sm font-medium text-white">Limited time offer - </p>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <span className="text-sm leading-tight font-semibold bg-white px-2.5 py-1.5 rounded-md mx-1">04</span>
-              <span className="text-xs text-slate-50">DAYS</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-sm leading-tight font-semibold bg-white px-2.5 py-1.5 rounded-md mx-1">06</span>
-              <span className="text-xs text-slate-50">HRS</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-sm leading-tight font-semibold bg-white px-2.5 py-1.5 rounded-md mx-1">42</span>
-              <span className="text-xs text-slate-50">MIN</span>
-            </div>
-          </div>
-          <span className="text-sm text-white">Use code - <span className="font-bold text-white ml-1">SAVE20</span></span>
+      <p className="text-sm font-medium text-white">
+        Limited time offer -
+      </p>
+
+      {/* TIMER */}
+      <div className="flex items-center gap-3">
+
+        {/* DAYS */}
+        <div className="flex items-center gap-1">
+          <span className="mx-1 rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold leading-tight text-slate-900">
+            {String(timeLeft.days).padStart(2, "0")}
+          </span>
+
+          <span className="text-xs text-slate-50">
+            DAYS
+          </span>
         </div>
 
-        <button type="button" aria-label="Dismiss notification banner"
-          className="absolute right-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
-          <svg xmlns="http://www.w3.org/2000/svg" className="size-3 cursor-pointer fill-slate-50" aria-hidden="true"
-            viewBox="0 0 329.269 329">
-            <path
-              d="M194.8 164.77 323.013 36.555c8.343-8.34 8.343-21.825 0-30.164-8.34-8.34-21.825-8.34-30.164 0L164.633 134.605 36.422 6.391c-8.344-8.34-21.824-8.34-30.164 0-8.344 8.34-8.344 21.824 0 30.164l128.21 128.215L6.259 292.984c-8.344 8.34-8.344 21.825 0 30.164a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25l128.21-128.214 128.216 128.214a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25 8.343-8.34 8.343-21.824 0-30.164zm0 0" />
-          </svg>
-        </button>
+        {/* HOURS */}
+        <div className="flex items-center gap-1">
+          <span className="mx-1 rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold leading-tight text-slate-900">
+            {String(timeLeft.hours).padStart(2, "0")}
+          </span>
+
+          <span className="text-xs text-slate-50">
+            HRS
+          </span>
+        </div>
+
+        {/* MINUTES */}
+        <div className="flex items-center gap-1">
+          <span className="mx-1 rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold leading-tight text-slate-900">
+            {String(timeLeft.minutes).padStart(2, "0")}
+          </span>
+
+          <span className="text-xs text-slate-50">
+            MIN
+          </span>
+        </div>
+
+        {/* SECONDS */}
+        <div className="flex items-center gap-1">
+          <span className="mx-1 rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold leading-tight text-slate-900">
+            {String(timeLeft.seconds).padStart(2, "0")}
+          </span>
+
+          <span className="text-xs text-slate-50">
+            SEC
+          </span>
+        </div>
+
       </div>
+
+      {/* COUPON */}
+      <span className="text-sm text-white">
+        Use code -
+        <span className="ml-1 font-bold text-white">
+          SAVE20
+        </span>
+      </span>
+
+    </div>
+
+    {/* CLOSE BUTTON */}
+    <button
+      type="button"
+      onClick={() => setShowPromotion(false)}
+      aria-label="Dismiss notification banner"
+      className="absolute right-4 rounded p-2 transition hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="size-3 cursor-pointer fill-slate-50"
+        aria-hidden="true"
+        viewBox="0 0 329.269 329"
+      >
+        <path d="M194.8 164.77 323.013 36.555c8.343-8.34 8.343-21.825 0-30.164-8.34-8.34-21.825-8.34-30.164 0L164.633 134.605 36.422 6.391c-8.344-8.34-21.824-8.34-30.164 0-8.344 8.34-8.344 21.824 0 30.164l128.21 128.215L6.259 292.984c-8.344 8.34-8.344 21.825 0 30.164a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25l128.21-128.214 128.216 128.214a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25 8.343-8.34 8.343-21.824 0-30.164zm0 0" />
+      </svg>
+    </button>
+
+  </div>
+)}
+
+
+
+
 
       {/* banner */}
 
-      <section aria-labelledby="banner-heading" className="px-4 md:px-8 mt-6">
-        <div className="grid px-6 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-600 rounded-lg overflow-hidden
-    min-h-48 max-w-5xl mx-auto md:grid-cols-3 md:gap-6 md:px-12">
+                   <section
+                aria-labelledby="banner-heading"
+                className="mt-6 w-full px-6 md:px-8"
+              >
+                <div
+                  className="
+                    relative mx-auto grid h-190px w-325 h-80
+                    overflow-hidden rounded-2xl
+                    bg-gradient-to-r from-indigo-950 via-blue-800 to-cyan-600
+                    px-6
+                    md:grid-cols-[1fr_320px]
+                    md:px-10
+                    lg:px-14
+                  "
+                >
 
-          <div className="md:col-span-2 py-6 md:py-8 md:max-w-xl">
-            <h2 id="banner-heading" className="text-3xl font-bold text-slate-50 mb-4 md:text-4xl">
-              Build with ReadymadeUI
-            </h2>
-            <p className="text-base text-slate-100 leading-relaxed">
-              The professional Tailwind CSS platform for high-speed development, built to help you design and launch modern
-              interfaces.
-            </p>
+                  {/* Decorative circles */}
+                  <div className="absolute -left-12 -top-16 h-40 w-40 rounded-full bg-white/10" />
+                  <div className="absolute bottom-[-80px] right-[25%] h-44 w-44 rounded-full bg-cyan-300/10" />
 
-            <div className="mt-8">
-              <a href="#"
-                className="py-2 px-3.5 text-sm inline-block rounded-md font-semibold cursor-pointer text-slate-900 border border-white bg-white hover:bg-slate-100 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-                Explore Templates
-              </a>
-            </div>
-          </div>
+                  {/* LEFT */}
+                  <div className="relative z-10 flex items-center py-7">
 
-          <div className="relative hidden h-full aspect-[22/16] md:block" aria-hidden="true">
-            <img src="https://readymadeui.com/images/tech-img.webp" alt="banner image"
-              className="w-full h-full right-0 top-0 md:absolute object-contain object-center" />
-          </div>
-        </div>
-      </section>
+                    <div>
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="rounded-full bg-yellow-300 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-slate-900">
+                          Limited Offer
+                        </span>
+
+                        <span className="text-xs font-medium text-blue-100">
+                          Ends Soon
+                        </span>
+                      </div>
+
+                      <h2
+                        id="banner-heading"
+                        className="text-2xl font-black text-white md:text-3xl"
+                      >
+                        Big Deals. Bigger Savings.
+                      </h2>
+
+                      <p className="mt-2 max-w-xl text-sm text-blue-100 md:text-base">
+                        Shop your favourites and save up to
+                        <span className="font-bold text-white"> 50% today.</span>
+                      </p>
+
+                      <a
+                        href="#products"
+                        className="
+                          mt-5 inline-flex items-center gap-2
+                          rounded-lg bg-white px-5 py-2.5
+                          text-sm font-bold text-blue-900
+                          transition hover:bg-blue-50
+                        "
+                      >
+                        Shop Deals
+                        <span>→</span>
+                      </a>
+                    </div>
+
+                  </div>
+
+                  {/* RIGHT */}
+                  <div
+                    className="relative hidden items-center justify-center md:flex"
+                    aria-hidden="true"
+                  >
+                    {/* Discount circle */}
+                    <div
+                      className="
+                        absolute left-0 top-6 z-20
+                        flex h-20 w-20 rotate-[-8deg]
+                        flex-col items-center justify-center
+                        rounded-full bg-yellow-300
+                        shadow-lg
+                      "
+                    >
+                      <span className="text-xs font-bold text-slate-700">
+                        UP TO
+                      </span>
+
+                      <span className="text-xl font-black text-slate-950">
+                        50%
+                      </span>
+
+                      <span className="text-[10px] font-bold text-slate-700">
+                        OFF
+                      </span>
+                    </div>
+
+                    <img
+                      src="https://readymadeui.com/images/tech-img.webp"
+                      alt=""
+                      className="
+                        absolute bottom-0 right-4
+                        h-[185px] w-[230px]
+                        object-contain
+                        drop-shadow-xl
+                      "
+                    />
+
+                  </div>
+
+                </div>
+              </section>
+
+
+
 
 
       <section className="mx-auto mt-8 w-full max-w-[1200px] px-6">
