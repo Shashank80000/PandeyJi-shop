@@ -63,3 +63,24 @@ export const placeOrder = async (req, res) => {
         return res.status(500).json({ message: "Internal server error", error: error.message });
     }
 }
+
+export const getAllOrders = async (req, res) => {
+    try {
+        const orders = await Order.find()
+            .populate("userId", "name email")
+            .populate("items.productId", "title name images image price")
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            count: orders.length,
+            orders,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch orders",
+            error: error.message,
+        });
+    }
+};

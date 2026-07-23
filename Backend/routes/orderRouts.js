@@ -1,8 +1,15 @@
-import express from 'express';
-import { placeOrder } from '../Controller/orderController.js';
+import express from "express";
+import {
+    placeOrder,
+    getAllOrders
+} from "../Controller/orderController.js";
 
 const router = express.Router();
 
-router.post('/place', placeOrder);
+// User places order
+router.post("/place", placeOrder);
+
+// Admin gets all orders
+router.get("/all", getAllOrders);
 
 export default router;

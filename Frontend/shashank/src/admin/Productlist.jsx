@@ -52,10 +52,25 @@ export default function ProductList() {
                         <h2 className="text-4xl font-black text-slate-900">Product List</h2>
                         <p className="mt-1 text-sm text-slate-500">Manage catalog items and stock in desktop view.</p>
                     </div>
+                    
+                
                     <div className="flex items-center gap-3">
+
+                {/* add new product button */}
+                    
                         <Link to="/admin/products/add" className="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">
                             Add New Product
                         </Link>
+
+                             {/* order buttoen */}
+                             <Link
+                                to="/admin/orders"
+                                className="rounded-lg bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800"
+                                >
+                                    View Orders
+                             </Link>
+
+
                         <button
                             onClick={handleLogout}
                             className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700"
