@@ -12,8 +12,9 @@ import Cart from "../Pages/Cart/cart.jsx";
 import Checkout from "../Pages/checkout/cheakout.jsx";
 import CheckoutAddress from "../Pages/checkout/cheakoutAddress.jsx";
 import OrderSuccess from "../Pages/checkout/OrderSuccess.jsx";
-import ProtectedRoute from "../productedRoute.jsx";
+import ProtectedRoute from "..//Component/productroutes.jsx";
 import AdminLogin from "../admin/adminLogin.jsx";
+import SearchBar from "../Component/searchBar.jsx";
 
 function Layout() {
   return (
@@ -61,6 +62,7 @@ export const router = createBrowserRouter([
       { path: "/checkout-address", element: <CheckoutAddress /> },
       { path: "/order-success/:id", element: <OrderSuccess /> },
       { path: "/admin/login", element: <AdminLogin /> },
+      { path: "/search/:keyword", element: <SearchBar /> }
     ],
   },
 ]);

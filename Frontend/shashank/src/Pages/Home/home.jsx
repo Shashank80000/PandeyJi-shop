@@ -6,6 +6,7 @@ import ShapeGrid from "../../Component/ShapeGrid/ShapeGrid";
 export default function Home() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [similarProducts, setSimilarProducts] = useState([]);
   const [searchParams] = useSearchParams();
   const search = searchParams.get("search") || "";
   const [category, setCategory] = useState("");
@@ -15,19 +16,26 @@ export default function Home() {
     try {
       const res = await api.get(`/products?search=${search}&category=${category}`);
 
-      const productList = Array.isArray(res.data)
-        ? res.data
-        : Array.isArray(res.data?.products)
-          ? res.data.products
-          : [];
+      if (search) {
+        setProducts(res.data.products || []);
+        setSimilarProducts(res.data.similarProducts || []);
+      } else {
+        const productList = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.products)
+            ? res.data.products
+            : [];
 
-      setProducts(productList);
+        setProducts(productList);
+        setSimilarProducts([]);
+      }
+
       setLoadError("");
     } catch (error) {
       setProducts([]);
       setLoadError(
         error?.response?.data?.message ||
-          "Unable to load products right now. Please try again."
+        "Unable to load products right now. Please try again."
       );
       console.error("Failed to load products", error);
     }
@@ -64,66 +72,66 @@ export default function Home() {
       {/* Last time offer */}
 
       <div role="region" aria-label="Promotion"
-   class="bg-blue-700 px-4 py-2.5 relative flex items-center justify-center text-center md:px-6">
+        className="bg-blue-700 px-4 py-2.5 relative flex items-center justify-center text-center md:px-6">
 
-   <div class="flex items-center justify-center flex-wrap gap-y-4 gap-x-6 pr-6">
-      <p class="text-sm font-medium text-white">Limited time offer - </p>
-      <div class="flex items-center gap-3">
-         <div class="flex items-center gap-1">
-            <span class="text-sm leading-tight font-semibold bg-white px-2.5 py-1.5 rounded-md mx-1">04</span>
-            <span class="text-xs text-slate-50">DAYS</span>
-         </div>
-         <div class="flex items-center gap-1">
-            <span class="text-sm leading-tight font-semibold bg-white px-2.5 py-1.5 rounded-md mx-1">06</span>
-            <span class="text-xs text-slate-50">HRS</span>
-         </div>
-         <div class="flex items-center gap-1">
-            <span class="text-sm leading-tight font-semibold bg-white px-2.5 py-1.5 rounded-md mx-1">42</span>
-            <span class="text-xs text-slate-50">MIN</span>
-         </div>
+        <div className="flex items-center justify-center flex-wrap gap-y-4 gap-x-6 pr-6">
+          <p className="text-sm font-medium text-white">Limited time offer - </p>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <span className="text-sm leading-tight font-semibold bg-white px-2.5 py-1.5 rounded-md mx-1">04</span>
+              <span className="text-xs text-slate-50">DAYS</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-sm leading-tight font-semibold bg-white px-2.5 py-1.5 rounded-md mx-1">06</span>
+              <span className="text-xs text-slate-50">HRS</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-sm leading-tight font-semibold bg-white px-2.5 py-1.5 rounded-md mx-1">42</span>
+              <span className="text-xs text-slate-50">MIN</span>
+            </div>
+          </div>
+          <span className="text-sm text-white">Use code - <span className="font-bold text-white ml-1">SAVE20</span></span>
+        </div>
+
+        <button type="button" aria-label="Dismiss notification banner"
+          className="absolute right-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
+          <svg xmlns="http://www.w3.org/2000/svg" className="size-3 cursor-pointer fill-slate-50" aria-hidden="true"
+            viewBox="0 0 329.269 329">
+            <path
+              d="M194.8 164.77 323.013 36.555c8.343-8.34 8.343-21.825 0-30.164-8.34-8.34-21.825-8.34-30.164 0L164.633 134.605 36.422 6.391c-8.344-8.34-21.824-8.34-30.164 0-8.344 8.34-8.344 21.824 0 30.164l128.21 128.215L6.259 292.984c-8.344 8.34-8.344 21.825 0 30.164a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25l128.21-128.214 128.216 128.214a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25 8.343-8.34 8.343-21.824 0-30.164zm0 0" />
+          </svg>
+        </button>
       </div>
-      <span class="text-sm text-white">Use code - <span class="font-bold text-white ml-1">SAVE20</span></span>
-   </div>
-
-   <button type="button" aria-label="Dismiss notification banner"
-      class="absolute right-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
-      <svg xmlns="http://www.w3.org/2000/svg" class="size-3 cursor-pointer fill-slate-50" aria-hidden="true"
-         viewBox="0 0 329.269 329">
-         <path
-            d="M194.8 164.77 323.013 36.555c8.343-8.34 8.343-21.825 0-30.164-8.34-8.34-21.825-8.34-30.164 0L164.633 134.605 36.422 6.391c-8.344-8.34-21.824-8.34-30.164 0-8.344 8.34-8.344 21.824 0 30.164l128.21 128.215L6.259 292.984c-8.344 8.34-8.344 21.825 0 30.164a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25l128.21-128.214 128.216 128.214a21.27 21.27 0 0 0 15.082 6.25c5.46 0 10.922-2.09 15.082-6.25 8.343-8.34 8.343-21.824 0-30.164zm0 0" />
-      </svg>
-   </button>
-</div>
 
       {/* banner */}
 
-        <section aria-labelledby="banner-heading" class="px-4 md:px-8 mt-6">
-  <div class="grid px-6 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-600 rounded-lg overflow-hidden
+      <section aria-labelledby="banner-heading" className="px-4 md:px-8 mt-6">
+        <div className="grid px-6 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-600 rounded-lg overflow-hidden
     min-h-48 max-w-5xl mx-auto md:grid-cols-3 md:gap-6 md:px-12">
 
-    <div class="md:col-span-2 py-6 md:py-8 md:max-w-xl">
-      <h2 id="banner-heading" class="text-3xl font-bold text-slate-50 mb-4 md:text-4xl">
-        Build with ReadymadeUI
-      </h2>
-      <p class="text-base text-slate-100 leading-relaxed">
-        The professional Tailwind CSS platform for high-speed development, built to help you design and launch modern
-        interfaces.
-      </p>
+          <div className="md:col-span-2 py-6 md:py-8 md:max-w-xl">
+            <h2 id="banner-heading" className="text-3xl font-bold text-slate-50 mb-4 md:text-4xl">
+              Build with ReadymadeUI
+            </h2>
+            <p className="text-base text-slate-100 leading-relaxed">
+              The professional Tailwind CSS platform for high-speed development, built to help you design and launch modern
+              interfaces.
+            </p>
 
-      <div class="mt-8">
-        <a href="#"
-          class="py-2 px-3.5 text-sm inline-block rounded-md font-semibold cursor-pointer text-slate-900 border border-white bg-white hover:bg-slate-100 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-          Explore Templates
-        </a>
-      </div>
-    </div>
+            <div className="mt-8">
+              <a href="#"
+                className="py-2 px-3.5 text-sm inline-block rounded-md font-semibold cursor-pointer text-slate-900 border border-white bg-white hover:bg-slate-100 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                Explore Templates
+              </a>
+            </div>
+          </div>
 
-    <div class="relative hidden h-full aspect-[22/16] md:block" aria-hidden="true">
-      <img src="https://readymadeui.com/images/tech-img.webp" alt="banner image"
-        class="w-full h-full right-0 top-0 md:absolute object-contain object-center" />
-    </div>
-  </div>
-</section>
+          <div className="relative hidden h-full aspect-[22/16] md:block" aria-hidden="true">
+            <img src="https://readymadeui.com/images/tech-img.webp" alt="banner image"
+              className="w-full h-full right-0 top-0 md:absolute object-contain object-center" />
+          </div>
+        </div>
+      </section>
 
 
       <section className="mx-auto mt-8 w-full max-w-[1200px] px-6">
@@ -144,17 +152,16 @@ export default function Home() {
 
           <div className="relative">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-             
+
 
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setCategory("")}
-                  className={`h-12 rounded-xl border px-4 text-sm font-semibold transition ${
-                    category === ""
-                      ? "border-teal-600 bg-teal-50 text-teal-800"
-                      : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
+                  className={`h-12 rounded-xl border px-4 text-sm font-semibold transition ${category === ""
+                    ? "border-teal-600 bg-teal-50 text-teal-800"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
                 >
                   All
                 </button>
@@ -162,11 +169,10 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setCategory("electronics")}
-                  className={`h-12 rounded-xl border px-4 text-sm font-semibold transition ${
-                    category === "electronics"
-                      ? "border-teal-600 bg-teal-50 text-teal-800"
-                      : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
+                  className={`h-12 rounded-xl border px-4 text-sm font-semibold transition ${category === "electronics"
+                    ? "border-teal-600 bg-teal-50 text-teal-800"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
                 >
                   electronics
                 </button>
@@ -174,11 +180,10 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setCategory("women")}
-                  className={`h-12 rounded-xl border px-4 text-sm font-semibold transition ${
-                    category === "women"
-                      ? "border-teal-600 bg-teal-50 text-teal-800"
-                      : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
+                  className={`h-12 rounded-xl border px-4 text-sm font-semibold transition ${category === "women"
+                    ? "border-teal-600 bg-teal-50 text-teal-800"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
                 >
                   women
                 </button>
@@ -186,11 +191,10 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setCategory("men")}
-                  className={`h-12 rounded-xl border px-4 text-sm font-semibold transition ${
-                    category === "men"
-                      ? "border-teal-600 bg-teal-50 text-teal-800"
-                      : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
+                  className={`h-12 rounded-xl border px-4 text-sm font-semibold transition ${category === "men"
+                    ? "border-teal-600 bg-teal-50 text-teal-800"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
                 >
                   men
                 </button>
@@ -204,6 +208,13 @@ export default function Home() {
         {loadError && (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
             {loadError}
+          </div>
+        )}
+
+        {search && (
+          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h1 className="text-2xl font-bold text-slate-900">Search results for "{search}"</h1>
+            <p className="mt-2 text-sm text-slate-600">Showing exact matches first, followed by similar products below.</p>
           </div>
         )}
 
@@ -282,6 +293,42 @@ export default function Home() {
               </article>
             ))}
           </div>
+
+        )}
+        {search && similarProducts.length > 0 && (
+          <>
+            <h2 className="mt-10 mb-5 text-2xl font-bold text-slate-900">
+              Similar Products
+            </h2>
+
+            <div className="-mx-6 overflow-x-auto pb-4 px-6">
+              <div className="flex gap-6">
+                {similarProducts.map((product) => (
+                  <article
+                    key={product._id}
+                    onClick={() => navigate(`/product/${product._id}`)}
+                    className="min-w-[260px] cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+                  >
+                    <img
+                      src={product.images?.[0]}
+                      alt={product.title}
+                      className="h-52 w-full object-cover"
+                    />
+
+                    <div className="p-4">
+                      <h3 className="font-semibold text-slate-900">
+                        {product.title}
+                      </h3>
+
+                      <p className="mt-2 text-lg font-bold text-slate-900">
+                        ₹{product.price}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </section>
     </div>

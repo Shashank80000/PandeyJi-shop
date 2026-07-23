@@ -29,4 +29,10 @@ const productSchema = new mongoose.Schema({
     }
 }, { timestamps : true });
 
+productSchema.index({
+    title: "text",
+    description: "text",
+    category: "text"
+});
+
 export default mongoose.model("Product", productSchema);
