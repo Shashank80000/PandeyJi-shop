@@ -1,21 +1,32 @@
-import {Link, useNavigate, useSearchParams} from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useState, useEffect } from "react";
 import api from "../../../src/api/axios";
 
 export default function Navbar() {
     const navigate = useNavigate();
     const [cartCount, setCartCount] = useState(0);
-    const [searchParams, setSearchParams] = useSearchParams();
-    const searchValue = searchParams.get("search") || "";
+    // const [searchParams, setSearchParams] = useSearchParams();
+    // const [searchValue, setSearchValue] = useState(searchParams.get("search") || "");
+    const [searchValue, setSearchValue] = useState("");
 
     const handleSearchChange = (e) => {
-        const value = e.target.value;
-        if (value.trim()) {
-            setSearchParams({ search: value });
+        setSearchValue(e.target.value);
+    };
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        const trimmedSearch = searchValue.trim();
+
+        if (trimmedSearch) {
+            navigate(`/search/${encodeURIComponent(trimmedSearch)}`);
         } else {
-            setSearchParams({});
+            navigate("/");
         }
     };
+
+    // useEffect(() => {
+    //     setSearchValue(searchParams.get("search") || "");
+    // }, [searchParams]);
 
     // Theme (applies to whole website by toggling `dark` class on <html>)
     const [theme, setTheme] = useState(() => {
@@ -77,13 +88,15 @@ export default function Navbar() {
                     Pandey Shop
                 </Link>
 
-                <input
-                    type="text"
-                    placeholder="Search products by title"
-                    value={searchValue}
-                    onChange={handleSearchChange}
-                    className="mx-4 h-10 flex-1 rounded-xl border border-slate-300 px-4 text-sm text-slate-800 outline-none ring-teal-600 transition focus:border-teal-600 focus:ring-2 max-w-xs dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                />
+                <form onSubmit={handleSearchSubmit} className="mx-4 flex flex-1 max-w-xs">
+                    <input
+                        type="text"
+                        placeholder="Search products by title"
+                        value={searchValue}
+                        onChange={handleSearchChange}
+                        className="h-10 flex-1 rounded-xl border border-slate-300 px-4 text-sm text-slate-800 outline-none ring-teal-600 transition focus:border-teal-600 focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                    />
+                </form>
 
                 <div className="flex items-center gap-6">
                     <Link to="/" className="text-sm font-medium text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
@@ -112,7 +125,7 @@ export default function Navbar() {
                         {theme === "dark" ? "🌙" : "☀️"}
                     </button>
 
-                    {!userId ?(
+                    {!userId ? (
                         <>
                             <Link to="/login" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900 dark:text-slate-200">
                                 Login

@@ -143,23 +143,63 @@ export const createProduct = async (req, res) => {
 };
 
 // Get all products
+// Get all products
 export const getAllProducts = async (req, res) => {
     try {
         const { search, category } = req.query;
 
-        const filter = {};
+        let filter = {};
 
-        if (search) {
-            filter.title = { $regex: search, $options: "i" };
-        }
-
+        // Category filter
         if (category) {
             filter.category = category;
         }
 
-        const products = await Product.find(filter).sort({ createdAt: -1 });
+        // If no search keyword, return all products
+        if (!search) {
+            const products = await Product.find(filter).sort({ createdAt: -1 });
 
-        res.json(products);
+            return res.status(200).json({
+                products,
+                similarProducts: []
+            });
+        }
+
+        // Search by title, description and category
+        filter.$or = [
+            { title: { $regex: search, $options: "i" } },
+            { description: { $regex: search, $options: "i" } },
+            { category: { $regex: search, $options: "i" } },
+        ];
+
+        let products = await Product.find(filter);
+
+        // Exact title matches first
+        products.sort((a, b) => {
+            const aExact = a.title.toLowerCase() === search.toLowerCase();
+            const bExact = b.title.toLowerCase() === search.toLowerCase();
+
+            if (aExact && !bExact) return -1;
+            if (!aExact && bExact) return 1;
+
+            return a.title.localeCompare(b.title);
+        });
+
+        // Find similar products from same category
+        let similarProducts = [];
+
+        if (products.length > 0) {
+            similarProducts = await Product.find({
+                category: products[0].category,
+                _id: { $nin: products.map((p) => p._id) },
+            }).limit(8);
+        }
+
+        res.status(200).json({
+            products,
+            similarProducts,
+        });
+
     } catch (error) {
         res.status(500).json({
             message: "Server Error",
