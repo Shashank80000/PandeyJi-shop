@@ -39,58 +39,144 @@
             loadCart();
         }, []);
 
-        const removeItem = async (productId) => {
-            await api.post(`/cart/remove`, { userId, productId });
-            loadCart();
-            window.dispatchEvent(new Event("cartUpdated"));
-        };
+       const removeItem = async (productId) => {
+    try {
+        await api.post("/cart/remove", { userId, productId });
 
-        //Update item quantity
-        const updateQty = async (productId, quantity) => {
-            if (quantity === 0) {
-                await removeItem(productId);
-                return;
-            }
+        // Update UI without reloading cart
+        setCart((prevCart) => ({
+            ...prevCart,
+            items: prevCart.items.filter((item) => {
+                const id =
+                    typeof item.productId === "object"
+                        ? item.productId?._id
+                        : item.productId;
 
-            await api.post(`/cart/update`, { userId, productId, quantity });
-            loadCart();
-            window.dispatchEvent(new Event("cartUpdated"));
-        };
+                return id !== productId;
+            }),
+        }));
 
-        if (loading) {
-            return <div className="mx-auto w-full max-w-[1200px] px-6 py-12 text-slate-600">Loading cart...</div>;
-        }
+        window.dispatchEvent(new Event("cartUpdated"));
+    } catch (error) {
+        console.error("Failed to remove item:", error);
+    }
+};
 
-        if (error) {
-            return <div className="mx-auto w-full max-w-[1200px] px-6 py-12 text-red-600">{error}</div>;
-        }
+// Update item quantity
+const updateQty = async (productId, quantity) => {
+    if (quantity <= 0) {
+        await removeItem(productId);
+        return;
+    }
 
-        if (!userId) {
-            return <div className="mx-auto w-full max-w-[1200px] px-6 py-12 text-slate-700">Please login to view your cart.</div>;
-        }
+    // Update UI immediately
+    setCart((prevCart) => ({
+        ...prevCart,
+        items: prevCart.items.map((item) => {
+            const id =
+                typeof item.productId === "object"
+                    ? item.productId?._id
+                    : item.productId;
 
-        const items = cart?.items || [];
-        const safeItems = items.map((item) => {
-            const product =
-                item?.productId && typeof item.productId === "object"
-                    ? item.productId
-                    : null;
+            return id === productId
+                ? { ...item, quantity }
+                : item;
+        }),
+    }));
 
-            return {
-                ...item,
-                productRefId:
-                    product?._id ||
-                    (typeof item?.productId === "string" ? item.productId : null),
-                productTitle: product?.title || "Product unavailable",
-                productImage: product?.image || "",
-                productPrice: Number(product?.price || 0),
-            };
+    try {
+        // Update backend
+        await api.post("/cart/update", {
+            userId,
+            productId,
+            quantity,
         });
 
-        const total = safeItems.reduce(
-            (sum, item) => sum + item.productPrice * Number(item.quantity || 0),
-            0
-        );
+        window.dispatchEvent(new Event("cartUpdated"));
+    } catch (error) {
+        console.error("Failed to update quantity:", error);
+
+        // Optional: reload only if API failed
+        loadCart();
+    }
+};
+
+
+
+        const items = cart?.items || [];
+
+
+
+const safeItems = items.map((item) => {
+
+    const product =
+
+        item?.productId && typeof item.productId === "object"
+
+            ? item.productId
+
+            : null;
+
+
+
+    return {
+
+        ...item,
+
+
+
+        productRefId:
+
+            product?._id ||
+
+            (typeof item?.productId === "string"
+
+                ? item.productId
+
+                : null),
+
+
+
+        productTitle:
+
+            product?.title || "Product unavailable",
+
+
+
+        productImage:
+
+            product?.image || "",
+
+
+
+        productPrice:
+
+            Number(product?.price || 0),
+
+
+
+        quantity:
+
+            Number(item?.quantity || 0),
+
+    };
+
+});
+
+
+
+const total = safeItems.reduce(
+
+    (sum, item) =>
+
+        sum + item.productPrice * item.quantity,
+
+    0
+
+);
+
+
+
 
         return (
             <div className="bg-slate-50 py-10">
