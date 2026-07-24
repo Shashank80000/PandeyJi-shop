@@ -272,18 +272,41 @@ useEffect(() => {
                         <span className="font-bold text-white"> 50% today.</span>
                       </p>
 
-                      <a
-                        href="#products"
-                        className="
-                          mt-5 inline-flex items-center gap-2
-                          rounded-lg bg-white px-5 py-2.5
-                          text-sm font-bold text-blue-900
-                          transition hover:bg-blue-50
-                        "
-                      >
-                        Shop Deals
-                        <span>→</span>
-                      </a>
+
+                     <a
+  href="#products"
+  onClick={(e) => {
+    e.preventDefault();
+
+    const section = document.getElementById("products");
+
+    if (section) {
+      section.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      setTimeout(() => {
+        window.scrollBy({
+          top: 150, // scroll 150px more down
+          behavior: "smooth",
+        });
+      }, 150);
+    }
+  }}
+  className="
+    mt-5 inline-flex items-center gap-2
+    rounded-lg bg-white px-5 py-2.5
+    text-sm font-bold text-blue-900
+    transition hover:bg-blue-50
+  "
+>
+  Shop Deals
+  <span>→</span>
+</a>
+
+
+
                     </div>
 
                   </div>
@@ -406,7 +429,8 @@ useEffect(() => {
         </div>
       </section>
 
-      <section className="mx-auto mt-6 w-full max-w-[1200px] px-6">
+      <section id="products"
+  className="mx-auto mt-6 w-full max-w-[1200px] px-6">
         {loadError && (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
             {loadError}
