@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --prefix Backend && npm install --prefix Frontend/shashank",
+  "installCommand": "npm install && npm install --prefix Frontend/shashank",
   "buildCommand": "npm run build --prefix Frontend/shashank",
   "outputDirectory": "Frontend/shashank/dist",
   "rewrites": [
