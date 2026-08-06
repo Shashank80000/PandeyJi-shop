@@ -1,3 +1,6 @@
+import dns from 'node:dns'; // or const dns = require('node:dns');
+dns.setServers(['8.8.8.8', '1.1.1.1']); 
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -15,6 +18,7 @@ const app = express();
 let dbConnectPromise;
 
 const ensureDbConnected = () => {
+  
     if (!dbConnectPromise) {
         dbConnectPromise = connectDB().catch((error) => {
             dbConnectPromise = null;
