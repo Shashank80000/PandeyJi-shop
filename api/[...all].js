@@ -1,4 +1,4 @@
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
 	try {
 		const { default: app } = await import("../Backend/server.js");
 		return app(req, res);
@@ -8,4 +8,4 @@ module.exports = async (req, res) => {
 			error: error.message,
 		});
 	}
-};
+}
