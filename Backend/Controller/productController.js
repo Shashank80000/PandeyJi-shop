@@ -1,5 +1,9 @@
+import mongoose from "mongoose";
 import Product from "../model/product.js";
 import cloudinary from "../config/cloudnary.js";
+
+// Safe ObjectId check — invalid ids would otherwise throw a CastError and 500.
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 const uploadBufferToCloudinary = (file) =>
     new Promise((resolve, reject) => {
@@ -24,10 +28,6 @@ const uploadBufferToCloudinary = (file) =>
 // Create new product
 export const createProduct = async (req, res) => {
     try {
-        console.log('createProduct called');
-        console.log('Content-Type:', req.headers['content-type']);
-        console.log('Body keys:', req.body && Object.keys(req.body));
-        console.log('Files:', req.files ? req.files.length : 0);
 
         if (!req.body || Object.keys(req.body).length === 0) {
             return res.status(400).json({
@@ -73,8 +73,6 @@ export const createProduct = async (req, res) => {
         // multer.memoryStorage() gives Buffer in file.buffer
         // req.files should be populated by upload.array("images", 5)
         const files = Array.isArray(req.files) ? req.files : [];
-        console.log("[createProduct] req.files length:", files.length);
-        console.log("[createProduct] req.body keys:", req.body ? Object.keys(req.body) : null);
 
         if (files.length === 0) {
             console.warn("No files received by multer.");
@@ -87,16 +85,7 @@ export const createProduct = async (req, res) => {
                     continue;
                 }
 
-                console.log(
-                    "Uploading file to cloudinary. buffer length:",
-                    file.buffer.length,
-                    "originalname:",
-                    file.originalname
-                );
-
                 const uploadedFile = await uploadBufferToCloudinary(file);
-                console.log("Cloudinary upload result keys:", uploadedFile ? Object.keys(uploadedFile) : null);
-                console.log("Cloudinary secure_url:", uploadedFile?.secure_url);
 
                 if (uploadedFile?.secure_url) {
                     uploadedImages.push(uploadedFile.secure_url);
@@ -226,6 +215,10 @@ export const getAllProducts = async (req, res) => {
 // Update product
 export const updateProduct = async (req, res) => {
     try {
+        if (!isValidId(req.params.id)) {
+            return res.status(400).json({ message: "Invalid product id" });
+        }
+
         if (!req.body || Object.keys(req.body).length === 0) {
             return res.status(400).json({
                 message: "Product details are required."
@@ -292,7 +285,15 @@ export const updateProduct = async (req, res) => {
 // Delete product
 export const deleteProduct = async (req, res) => {
     try {
-        await Product.findByIdAndDelete(req.params.id);
+        if (!isValidId(req.params.id)) {
+            return res.status(400).json({ message: "Invalid product id" });
+        }
+
+        const deleted = await Product.findByIdAndDelete(req.params.id);
+
+        if (!deleted) {
+            return res.status(404).json({ message: "Product not found" });
+        }
 
         res.json({
             message: "Product deleted successfully",

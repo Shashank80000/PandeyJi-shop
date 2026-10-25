@@ -17,7 +17,7 @@ const router = express.Router();
 router.post("/login", loginAdmin);
 
 
-// ⚠️ USE ONLY ONCE THEN DELETE
+// One-time bootstrap only: refuses once any admin exists (see createAdmin).
 router.post("/create-admin", createAdmin);
 
 // router to create new product (handles multipart/form-data)

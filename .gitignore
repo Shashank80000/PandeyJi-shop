@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment files — NEVER commit real secrets
+.env
+.env.local
+.env.*.local
+
+# Allow example env files
+!**/.env.example
+
+# Build output
+Frontend/dist/
+build/
+
+# Logs
+*.log
+devserver.log
+buildlog.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

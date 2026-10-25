@@ -33,7 +33,7 @@ export const signupUser = async (req, res)=>{
                 return res.status(409).json({ message: "User already exists" });
           }
 
-          res.status(500).json({message: "Server error", error: error.message})
+          res.status(500).json({message: "Server error"})
     }
 }
 
@@ -63,6 +63,10 @@ export const loginUser = async (req, res)=>{
         }
 
         //generate token
+        if (!process.env.JWT_SECRET) {
+            console.error("JWT_SECRET is not configured");
+            return res.status(500).json({ message: "Server configuration error" });
+        }
         const token = jwt.sign({ userID : user._id }, process.env.JWT_SECRET, {expiresIn : "3d"});
         res.json({
             message : "Login successful",
@@ -79,7 +83,7 @@ export const loginUser = async (req, res)=>{
 
 
     }catch(error){
-        return res.status(500).json({ message: "Server error", error: error.message });
+        return res.status(500).json({ message: "Server error" });
 
 }
 }

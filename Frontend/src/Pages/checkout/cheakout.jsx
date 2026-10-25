@@ -1,195 +1,74 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../../api/axios.js";
 import { useNavigate } from "react-router";
+import { clearStaticCart, getStaticCartItems } from "../../services/staticCart.js";
+import { createStaticOrder, getStaticAddresses } from "../../services/staticStore.js";
+import { getAddresses, getCart, publishCartUpdate } from "../../services/resourceCache.js";
 
 export default function Checkout() {
-  const navigate = useNavigate();
-  const userId = localStorage.getItem("userId");
+ const navigate = useNavigate();
+ const userId = localStorage.getItem("userId");
+ const [staticItems, setStaticItems] = useState(() => getStaticCartItems());
+ const [backendCart, setBackendCart] = useState({ items: [] });
+ const [addresses, setAddresses] = useState([]);
+ const [selectedAddress, setSelectedAddress] = useState(null);
+ const [loading, setLoading] = useState(true);
+ const [error, setError] = useState("");
+ const isStaticCheckout = staticItems.length > 0;
 
-  const [addresses, setAddresses] = useState([]);
-  const [selectedAddress, setSelectedAddress] = useState(null);
-  const [cart, setCart] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // Load cart + addresses
-  useEffect(() => {
-    const loadCheckoutData = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        if (!userId) {
-          setCart({ items: [] });
-          setAddresses([]);
-          setSelectedAddress(null);
-          return;
-        }
-
-        const [cartResponse, addressResponse] = await Promise.all([
-          api.get(`/cart/${userId}`),
-          api.get(`/address/${userId}`),
-        ]);
-
-
-
-            setCart(cartResponse.data?.cart || { items: [] });
-
-      const addressList = Array.isArray(addressResponse.data)
-        ? addressResponse.data
-        : Array.isArray(addressResponse.data?.addresses)
-          ? addressResponse.data.addresses
-          : [];
-
-      setAddresses(addressList);
-      setSelectedAddress(addressList[0] || null);
-
-
-
-
-      } catch (fetchError) {
-        setError(fetchError?.response?.data?.message || "Unable to load checkout data");
-        setCart({ items: [] });
-        setAddresses([]);
-        setSelectedAddress(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCheckoutData();
-  }, [userId]);
-
-  if (loading) return <div className="mx-auto w-full max-w-[1200px] px-6 py-12 text-slate-600">Loading checkout...</div>;
-
-  if (error) return <div className="mx-auto w-full max-w-[1200px] px-6 py-12 text-red-600">{error}</div>;
-
-  if (!userId) return <div className="mx-auto w-full max-w-[1200px] px-6 py-12 text-slate-700">Please login to continue checkout.</div>;
-
-  const items = Array.isArray(cart.items) ? cart.items : [];
-  const safeItems = items.map((item) => ({
-    ...item,
-    productPrice:
-      item?.productId && typeof item.productId === "object"
-        ? Number(item.productId.price || 0)
-        : 0,
-    productTitle:
-      item?.productId && typeof item.productId === "object"
-        ? item.productId.title || "Product"
-        : "Product",
-  }));
-
-  const total = safeItems.reduce(
-    (sum, item) => sum + item.productPrice * Number(item.quantity || 0),
-    0
-  );
-
-  // ✅ PLACE ORDER + CLEAR CART
-  const placeOrder = async () => {
-    if (!selectedAddress) {
-      alert("Please select address");
-      return;
+ useEffect(() => {
+  const loadCheckout = async () => {
+   try {
+    setLoading(true);
+    setError("");
+    const localItems = getStaticCartItems();
+    setStaticItems(localItems);
+    if (localItems.length > 0) {
+     const localAddresses = getStaticAddresses();
+     setAddresses(localAddresses);
+     setSelectedAddress(localAddresses[0] || null);
+     return;
     }
-
-    try {
-      const res = await api.post("/orders/place", {
-        userId,
-        address: selectedAddress,
-      });
-
-      if (res?.data?.orderId) {
-        navigate(`/order-success/${res.data.orderId}`, { replace: true });
-        return;
-      }
-
-      navigate("/order-success", { replace: true });
-    } catch (placeOrderError) {
-      alert(placeOrderError?.response?.data?.message || "Unable to place order");
-    }
+    if (!userId) return;
+    const [cartResponse, addressResponse] = await Promise.all([getCart(userId), getAddresses(userId)]);
+    setBackendCart(cartResponse?.cart || { items: [] });
+    const addressList = Array.isArray(addressResponse) ? addressResponse : addressResponse?.addresses || [];
+    setAddresses(addressList);
+    setSelectedAddress(addressList[0] || null);
+   } catch (requestError) {
+    setError(requestError?.response?.data?.message || "Unable to load checkout data");
+   } finally {
+    setLoading(false);
+   }
   };
+  loadCheckout();
+ }, [userId]);
 
-  return (
-    <div className="bg-slate-50 py-10">
-      <div className="mx-auto w-full max-w-[1200px] px-6">
-        <h1 className="text-4xl font-black text-slate-900">Checkout</h1>
+ const items = useMemo(() => isStaticCheckout
+  ? staticItems.map((item) => ({ ...item, productTitle: item.title, productPrice: Number(item.price || 0), quantity: Number(item.quantity || 0) }))
+  : (backendCart.items || []).map((item) => ({ ...item, productTitle: item.productId?.title || "Product", productPrice: Number(item.productId?.price || 0), quantity: Number(item.quantity || 0) })), [backendCart, isStaticCheckout, staticItems]);
+ const total = items.reduce((sum, item) => sum + item.productPrice * item.quantity, 0);
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-black text-slate-900">Select Delivery Address</h2>
-              <button onClick={() => navigate("/checkout-address")} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                Add New
-              </button>
-            </div>
+ const placeOrder = async () => {
+  if (!selectedAddress) return setError("Please add and select a delivery address.");
+  if (items.length === 0) return setError("Your cart is empty.");
+  try {
+   if (isStaticCheckout) {
+    const order = createStaticOrder({ items, address: selectedAddress, total });
+    clearStaticCart();
+    navigate(`/order-success/${order._id}`, { replace: true });
+    return;
+   }
+   const response = await api.post("/orders/place", { userId, address: selectedAddress });
+   publishCartUpdate(userId, { items: [] });
+   navigate(`/order-success/${response.data?.orderId || "complete"}`, { replace: true });
+  } catch (requestError) {
+   setError(requestError?.response?.data?.message || "Unable to place order");
+  }
+ };
 
-                {addresses.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 p-6">
-              <p className="text-sm text-slate-600">
-                No delivery address found.
-              </p>
+ if (loading) return <div className="mx-auto max-w-[1200px] px-6 py-12 text-ink-soft">Loading checkout...</div>;
+ if (!isStaticCheckout && !userId) return <div className="mx-auto max-w-[1200px] px-6 py-12 text-ink">Please log in to check out backend products.</div>;
 
-              <button
-                type="button"
-                onClick={() => navigate("/checkout-address")}
-                className="mt-4 rounded-xl bg-teal-700 px-5 py-3 font-bold text-white hover:bg-teal-800"
-              >
-                + Add Delivery Address
-              </button>
-            </div>
-          ) : (
-
-
-              <div className="space-y-3">
-                {addresses.map((addr) => (
-                  <label
-                    key={addr._id}
-                    className="block cursor-pointer rounded-xl border border-slate-200 p-4 transition hover:border-teal-300"
-                  >
-                    <input
-                      type="radio"
-                      name="address"
-                      checked={selectedAddress?._id === addr._id}
-                      onChange={() => setSelectedAddress(addr)}
-                      className="mr-2"
-                    />
-                    <strong className="text-slate-900">{addr.fullName}</strong>
-                    <p className="mt-1 text-sm text-slate-600">
-                      {addr.adressLine}, {addr.city}, {addr.state} - {addr.pincode}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-600">Phone: {addr.phone}</p>
-                  </label>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-black text-slate-900">Order Summary</h2>
-            <div className="mt-4 max-h-64 space-y-2 overflow-auto pr-1">
-              {safeItems.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                  <span className="max-w-[180px] truncate">{item.productTitle} x {item.quantity}</span>
-                  <span>${(item.productPrice * Number(item.quantity || 0)).toFixed(2)}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 border-t border-slate-200 pt-4">
-              <div className="flex items-center justify-between text-lg font-black text-slate-900">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <button
-              onClick={placeOrder}
-              className="mt-6 w-full rounded-xl bg-emerald-600 py-3 text-base font-bold text-white hover:bg-emerald-700"
-            >
-              Place Order (COD)
-            </button>
-          </aside>
-        </div>
-      </div>
-    </div>
-  );
+ return <main className="min-h-screen bg-surface py-10"><div className="mx-auto w-full max-w-[1200px] px-6"><div className="mb-6"><p className="text-sm font-bold uppercase tracking-[0.18em] text-accent-strong">{isStaticCheckout ? "Local static checkout" : "Checkout"}</p><h1 className="mt-2 text-4xl font-black text-ink">Checkout</h1></div>{error && <p className="mb-5 rounded-xl bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</p>}<div className="grid gap-6 lg:grid-cols-[1fr_360px]"><section className="rounded-2xl border border-line bg-card p-6 shadow-sm"><div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-black">Select Delivery Address</h2><button type="button" onClick={() => navigate("/checkout-address")} className="rounded-lg border border-line px-3 py-2 text-sm font-semibold">Add New</button></div>{addresses.length === 0 ? <div className="rounded-xl border border-dashed p-6"><p>No delivery address found.</p><button type="button" onClick={() => navigate("/checkout-address")} className="mt-4 rounded-xl bg-accent-strong px-5 py-3 font-bold text-white">Add Delivery Address</button></div> : <div className="space-y-3">{addresses.map((address) => <label key={address._id} className="block cursor-pointer rounded-xl border p-4"><input type="radio" checked={selectedAddress?._id === address._id} onChange={() => setSelectedAddress(address)} className="mr-2" /><strong>{address.fullName}</strong><p className="mt-1 text-sm text-ink-soft">{address.adressLine || address.addressLine}, {address.city}, {address.state} - {address.pincode}</p><p className="text-sm text-ink-soft">Phone: {address.phone}</p></label>)}</div>}</section><aside className="h-fit rounded-2xl border border-line bg-card p-6 shadow-sm"><h2 className="text-xl font-black">Order Summary</h2><div className="mt-4 space-y-2">{items.map((item) => <div key={item.id || item._id || item.productId?._id} className="flex justify-between rounded-lg bg-surface px-3 py-2 text-sm"><span>{item.productTitle} × {item.quantity}</span><span>₹{(item.productPrice * item.quantity).toFixed(2)}</span></div>)}</div><div className="mt-4 flex justify-between border-t pt-4 text-lg font-black"><span>Total</span><span>₹{total.toFixed(2)}</span></div><button type="button" onClick={placeOrder} className="mt-6 w-full rounded-xl bg-accent-strong py-3 font-bold text-white hover:bg-accent-strong">Place Order (COD)</button></aside></div></div></main>;
 }

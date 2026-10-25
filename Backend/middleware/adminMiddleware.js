@@ -16,6 +16,11 @@ export const verifyAdmin = (req, res, next) => {
     const token = authHeader.split(" ")[1];
 
     try {
+        if (!process.env.JWT_ADMIN_SECRET) {
+            console.error("JWT_ADMIN_SECRET is not configured");
+            return res.status(500).json({ message: "Server configuration error" });
+        }
+
         const decoded = jwt.verify(token, process.env.JWT_ADMIN_SECRET);
 
         if (decoded.role !== "admin") {

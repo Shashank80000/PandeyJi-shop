@@ -6,13 +6,20 @@ import jwt from "jsonwebtoken";
 export const loginAdmin = async (req, res) => {
     const { email, password } = req.body;
 
-    let admin = await Admin.findOne({ email });
+    if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    let admin = await Admin.findOne({ email: normalizedEmail });
+
+    // Auto-create the first admin ONLY from env credentials when no admin exists.
+    // SECURITY: the bootstrap password must come from the environment — no hardcoded fallback.
     if (!admin) {
-        // Auto-create admin on first login if using default credentials
-        const defaultEmail = process.env.ADMIN_EMAIL || "admin@gmail.com";
-        const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || "shashankapassword";
-        
-        if (email === defaultEmail && password === defaultPassword) {
+        const defaultEmail = (process.env.ADMIN_EMAIL || "").toLowerCase();
+        const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD;
+
+        if (defaultEmail && defaultPassword && normalizedEmail === defaultEmail && password === defaultPassword) {
             const hashedPassword = await bcrypt.hash(defaultPassword, 10);
             admin = new Admin({
                 email: defaultEmail,
@@ -20,21 +27,14 @@ export const loginAdmin = async (req, res) => {
             });
             await admin.save();
         } else {
-            return res.status(400).json({ message: "Admin not found" });
+            return res.status(401).json({ message: "Invalid admin credentials" });
         }
     }
 
-    // Allow a default password to always work (use env var or fallback)
-    const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || "shashankapassword";
-    let isMatch = false;
-    if (password === defaultPassword) {
-        isMatch = true;
-    } else {
-        isMatch = await bcrypt.compare(password, admin.password);
-    }
-
+    // Real bcrypt check — the bootstrap password does NOT bypass hashing once the admin exists.
+    const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-        return res.status(400).json({ message: "Wrong password" });
+        return res.status(401).json({ message: "Invalid admin credentials" });
     }
 
     const token = jwt.sign(
@@ -46,25 +46,27 @@ export const loginAdmin = async (req, res) => {
     res.json({ token });
 };
 
-// ⚠️ TEMPORARY (create admin once)
+// ⚠️ TEMPORARY (create admin once) — protected + one-time only
 export const createAdmin = async (req, res) => {
     try {
-        const existingAdmin = await Admin.findOne({ email: process.env.ADMIN_EMAIL || "admin@gmail.com" });
-        if (existingAdmin) {
-            return res.status(400).json({ message: "Admin already exists" });
+        // One-time setup: refuse once any admin account already exists.
+        const anyAdmin = await Admin.findOne({});
+        if (anyAdmin) {
+            return res.status(403).json({ message: "Admin already exists. Setup is locked." });
         }
 
-        const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || "shashankapassword";
-        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+        const email = (req.body.email || process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+        const password = req.body.password || process.env.DEFAULT_ADMIN_PASSWORD;
 
-        const admin = new Admin({
-            email: process.env.ADMIN_EMAIL || "admin@gmail.com",
-            password: hashedPassword,
-        });
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required" });
+        }
 
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const admin = new Admin({ email, password: hashedPassword });
         await admin.save();
-        res.json({ message: "Admin created successfully" });
+        res.status(201).json({ message: "Admin created successfully" });
     } catch (error) {
-        res.status(500).json({ message: "Error creating admin", error: error.message });
+        res.status(500).json({ message: "Error creating admin" });
     }
 };
