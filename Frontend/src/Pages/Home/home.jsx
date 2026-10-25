@@ -1,6 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Heart, ShoppingBag, Sparkles, Star, Tag } from "lucide-react";
 import { Link, useNavigate } from "react-router";
+import api from "../../api/axios.js";
+import { getCatalogue, publishCartUpdate } from "../../services/resourceCache.js";
 import { addStaticCartItem } from "../../services/staticCart.js";
 import { STATIC_CATEGORIES, STATIC_PRODUCTS } from "../../services/staticStore.js";
 function StaticProductCard({ product, isWishlisted, onToggleWishlist, onAddToCart }) {
@@ -27,12 +29,34 @@ function StaticProductCard({ product, isWishlisted, onToggleWishlist, onAddToCar
 
 export default function Home() {
  const [category, setCategory] = useState("");
+ const productsRef = useRef(null);
  const [toast, setToast] = useState("");
  const toastTimer = useRef(null);
  const [wishlistIds, setWishlistIds] = useState(() => JSON.parse(localStorage.getItem("wishlistIds") || "[]"));
+ const [backendProducts, setBackendProducts] = useState([]);
+ const [backendLoading, setBackendLoading] = useState(true);
+ const [backendError, setBackendError] = useState("");
+
+ useEffect(() => {
+  const controller = new AbortController();
+  getCatalogue({}, { signal: controller.signal })
+   .then((data) => setBackendProducts(Array.isArray(data) ? data : data?.products || []))
+   .catch((error) => {
+    if (error?.name !== "AbortError" && error?.name !== "CanceledError") {
+     setBackendError(error.response?.data?.message || "Unable to load products from the store.");
+    }
+   })
+   .finally(() => { if (!controller.signal.aborted) setBackendLoading(false); });
+  return () => controller.abort();
+ }, []);
 
  const products = useMemo(() => category ? STATIC_PRODUCTS.filter((product) => product.category === category) : STATIC_PRODUCTS, [category]);
  const heroProduct = STATIC_PRODUCTS[0];
+
+ const exploreCollection = () => {
+  setCategory(heroProduct.category);
+  productsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+ };
 
  const toggleWishlist = (productId) => {
   setWishlistIds((current) => {
@@ -49,6 +73,25 @@ export default function Home() {
   toastTimer.current = window.setTimeout(() => setToast(""), 2200);
  };
 
+ const addBackendToCart = async (product) => {
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+   setToast("Please log in to add backend products to your cart");
+   window.clearTimeout(toastTimer.current);
+   toastTimer.current = window.setTimeout(() => setToast(""), 2600);
+   return;
+  }
+  try {
+   const response = await api.post("/cart/add", { userId, productId: product._id });
+   publishCartUpdate(userId, response.data?.cart);
+   setToast(`${product.title} added to cart`);
+  } catch (error) {
+   setToast(error.response?.data?.message || "Unable to add product to cart");
+  }
+  window.clearTimeout(toastTimer.current);
+  toastTimer.current = window.setTimeout(() => setToast(""), 2600);
+ };
+
  return (
   <main className="min-h-[calc(100vh-80px)] bg-page py-6 sm:py-8">
    <div className="mx-auto w-full max-w-[1380px] px-4 sm:px-6 lg:px-8">
@@ -57,13 +100,17 @@ export default function Home() {
 
      <div className="min-w-0">
       <div className="mb-5 flex gap-2 overflow-x-auto pb-1 lg:hidden">{["", ...STATIC_CATEGORIES.map((item) => item.name)].map((item) => <button key={item || "all"} type="button" onClick={() => setCategory(item)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${category === item ? "bg-accent text-white" : "bg-chip text-ink-soft"}`}>{item || "All"}</button>)}</div>
-      <section className="grid min-h-[340px] overflow-hidden rounded-[1.6rem] bg-overlay md:grid-cols-[1fr_0.8fr]"><div className="flex flex-col justify-center p-7 sm:p-10"><p className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-accent-ink dark:text-[#f2a186]"><Sparkles size={15} /> From our collection</p><h1 className="max-w-xl text-4xl font-black leading-[1.05] tracking-tight text-ink dark:text-[#f7ece5] sm:text-5xl">{heroProduct.title}</h1><p className="mt-4 max-w-md text-sm leading-6 text-[#765c4e] dark:text-[#d3b8ab]">{heroProduct.description}</p><div className="mt-6 flex flex-wrap items-center gap-4"><button type="button" onClick={() => setCategory(heroProduct.category)} className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-black text-white hover:bg-accent-strong">Explore collection <ArrowRight size={16} /></button><span className="text-xl font-black text-ink dark:text-[#f7ece5]">₹{heroProduct.price.toFixed(2)}</span></div></div><div className="relative min-h-[260px] bg-[#b9d8d7] dark:bg-[#20403f]"><img src={heroProduct.image} alt={heroProduct.title} className="h-full w-full object-cover" /><span className="absolute right-5 top-5 rounded-full bg-card/80 px-3 py-1 text-xs font-black uppercase tracking-wider text-accent-ink">{heroProduct.category}</span></div></section>
+      <section className="grid min-h-[340px] overflow-hidden rounded-[1.6rem] bg-overlay md:grid-cols-[1fr_0.8fr]"><div className="flex flex-col justify-center p-7 sm:p-10"><p className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-accent-ink dark:text-[#f2a186]"><Sparkles size={15} /> From our collection</p><h1 className="max-w-xl text-4xl font-black leading-[1.05] tracking-tight text-ink dark:text-[#f7ece5] sm:text-5xl">{heroProduct.title}</h1><p className="mt-4 max-w-md text-sm leading-6 text-[#765c4e] dark:text-[#d3b8ab]">{heroProduct.description}</p><div className="mt-6 flex flex-wrap items-center gap-4"><button type="button" onClick={exploreCollection} className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-black text-white hover:bg-accent-strong">Explore collection <ArrowRight size={16} /></button><span className="text-xl font-black text-ink dark:text-[#f7ece5]">₹{heroProduct.price.toFixed(2)}</span></div></div><div className="relative min-h-[260px] bg-[#b9d8d7] dark:bg-[#20403f]"><img src={heroProduct.image} alt={heroProduct.title} className="h-full w-full object-cover" /><span className="absolute right-5 top-5 rounded-full bg-card/80 px-3 py-1 text-xs font-black uppercase tracking-wider text-accent-ink">{heroProduct.category}</span></div></section>
      </div>
     </div>
 
     <section className="mt-12"><div className="mb-5"><p className="text-xs font-black uppercase tracking-[0.2em] text-accent">Browse the collection</p><h2 className="mt-1 text-3xl font-black">Explore Categories</h2></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{STATIC_CATEGORIES.map((item) => <button type="button" key={item.name} onClick={() => setCategory(item.name)} className="group relative min-h-32 overflow-hidden rounded-2xl bg-card-soft text-left"><img src={item.image} alt={item.name} className="absolute inset-0 h-full w-full object-cover opacity-80 transition group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-[#2f2926]/75 to-transparent" /><span className="absolute bottom-3 left-3 text-sm font-black text-white">{item.name}</span></button>)}</div></section>
 
-    <section className="mt-12"><div className="mb-5"><p className="text-xs font-black uppercase tracking-[0.2em] text-accent">Static homepage collection</p><h2 className="mt-1 text-3xl font-black">{category ? `${category} Products` : "Featured Products"}</h2></div><div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{products.map((product) => <StaticProductCard key={product.id} product={product} isWishlisted={wishlistIds.includes(product.id)} onToggleWishlist={toggleWishlist} onAddToCart={addToCart} />)}</div></section>
+    <section ref={productsRef} className="mt-12 scroll-mt-24"><div className="mb-5"><p className="text-xs font-black uppercase tracking-[0.2em] text-accent">Static homepage collection</p><h2 className="mt-1 text-3xl font-black">{category ? `${category} Products` : "Featured Products"}</h2></div><div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{products.map((product) => <StaticProductCard key={product.id} product={product} isWishlisted={wishlistIds.includes(product.id)} onToggleWishlist={toggleWishlist} onAddToCart={addToCart} />)}</div></section>
+
+    <section className="mt-12"><div className="mb-5"><p className="text-xs font-black uppercase tracking-[0.2em] text-accent">From the store</p><h2 className="mt-1 text-3xl font-black">Shop All Products</h2></div>
+     {backendLoading ? <p className="py-8 text-sm text-ink-soft">Loading products…</p> : backendError ? <p className="py-8 text-sm text-ink-soft">{backendError}</p> : backendProducts.length === 0 ? <p className="py-8 text-sm text-ink-soft">No products available yet.</p> : <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{backendProducts.map((product) => { const image = product.images?.find(Boolean) || product.image; return <article key={product._id} className="group overflow-hidden rounded-[1.35rem] border border-line bg-card shadow-[0_10px_30px_rgba(111,78,55,0.07)] transition hover:-translate-y-1 hover:shadow-lg"><Link to={`/product/${product._id}`} className="block"><div className="aspect-[1.05/1] overflow-hidden bg-card-soft">{image ? <img src={image} alt={product.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /> : <div className="grid h-full place-items-center text-sm text-ink-faint">No image available</div>}</div></Link><div className="p-4"><p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-accent-ink">{product.category || "Product"}</p><h3 className="min-h-12 text-lg font-bold leading-tight text-ink"><Link to={`/product/${product._id}`} className="hover:text-accent">{product.title}</Link></h3><p className="mt-2 line-clamp-2 text-sm leading-6 text-ink-soft">{product.description || "No description available."}</p><div className="mt-4 flex items-end justify-between gap-3"><div><p className="text-xl font-black text-ink">₹{Number(product.price || 0).toFixed(2)}</p>{Number(product.stock) <= 5 && Number(product.stock) > 0 && <p className="mt-1 text-xs font-semibold text-accent-ink">Only {product.stock} left</p>}</div><button type="button" onClick={() => addBackendToCart(product)} className="grid h-10 w-10 place-items-center rounded-full bg-accent text-white transition hover:bg-accent-strong" aria-label={`Add ${product.title} to cart`}><ShoppingBag size={17} /></button></div></div></article>; })}</div>}
+    </section>
 
     {toast && <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-ink px-6 py-3 text-sm font-bold text-page shadow-lg">{toast}</div>}
    </div>

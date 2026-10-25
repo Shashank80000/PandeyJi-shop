@@ -4,6 +4,7 @@ import Home from "../Pages/Home/home.jsx";
 import Login from "../Pages/Auth/login.jsx";
 import Signup from "../Pages/Auth/signup.jsx";
 import ProductDetail from "../Pages/Product/productdetail.jsx";
+import StaticProductDetail from "../Pages/Product/staticProductDetail.jsx";
 import AddProduct from "../admin/Addproduct.jsx";
 import ProductList from "../admin/Productlist.jsx";
 import EditProduct from "../admin/Editproduct.jsx";
@@ -17,6 +18,7 @@ import ProtectedRoute from "..//Component/productroutes.jsx";
 import AdminLogin from "../admin/adminLogin.jsx";
 import SearchBar from "../Component/searchBar.jsx";
 import OrderList from "../admin/OrderList.jsx";
+import ErrorPage from "../Pages/ErrorPage.jsx";
 
 
 function Layout() {
@@ -35,11 +37,13 @@ function Layout() {
 export const router = createBrowserRouter([
   {
     element: <Layout />,
+    errorElement: <ErrorPage />,
     children: [
       { path: "/", element: <Home /> },
       { path: "/login", element: <Login /> },
       { path: "/signup", element: <Signup /> },
       { path: "/product/:id", element: <ProductDetail /> },
+      { path: "/static-product/:id", element: <StaticProductDetail /> },
       { path: "/cart", element: <Cart /> },
       {
         path: "/admin/products",
@@ -80,7 +84,8 @@ export const router = createBrowserRouter([
       { path: "/checkout-address", element: <CheckoutAddress /> },
       { path: "/order-success/:id", element: <OrderSuccess /> },
       { path: "/admin/login", element: <AdminLogin /> },
-      { path: "/search/:keyword", element: <SearchBar /> }
+      { path: "/search/:keyword", element: <SearchBar /> },
+      { path: "*", element: <ErrorPage /> }
 
     ],
   },
